@@ -5,6 +5,19 @@ DURATION=${UPNP_DURATION:-86400}            # 24 hours in seconds
 REFRESH_INTERVAL=$((DURATION * 80 / 100))   # Refresh at 80% of duration
 DEFAULT_PORTS='[]'                          # Empty array as default
 
+# Function to get local IP address
+get_local_ip() {
+    # First try to get it from upnpc -l
+    local ip=$(upnpc -l 2>&1 | grep "Local LAN ip address" | cut -d':' -f2 | tr -d ' ')
+    
+    if [ -z "$ip" ]; then
+        # Fallback method using ip command
+        ip=$(ip route get 1 | awk '{print $(NF-2);exit}')
+    fi
+    
+    echo "$ip"
+}
+
 # Function to validate JSON array
 validate_ports() {
     if ! echo "$1" | jq empty; then
@@ -17,9 +30,10 @@ validate_ports() {
 add_port_mapping() {
     local port=$1
     local protocol=$2
+    local local_ip=$3
     
     echo "Adding mapping for port $port/$protocol..."
-    upnpc -a "" "$port" "$port" "$protocol" "$DURATION"
+    upnpc -a "$local_ip" "$port" "$port" "$protocol" "$DURATION"
     local status=$?
     
     if [ $status -eq 0 ]; then
@@ -47,9 +61,19 @@ add_port_mappings() {
     
     echo "Adding/Refreshing port mappings..."
     
+    # Get local IP once
+    local local_ip=$(get_local_ip)
+    echo "Using local IP address: $local_ip"
+
+    # Check if local IP is empty
+    if [ -z "$local_ip" ]; then
+        echo "Error: Failed to get local IP address"
+        exit 1
+    fi
+    
     # Iterate through the JSON array
     echo "$ports_json" | jq -r '.[] | "\(.port) \(.protocol)"' | while read -r port protocol; do
-        add_port_mapping "$port" "$protocol"
+        add_port_mapping "$port" "$protocol" "$local_ip"
     done
     
     # List current mappings
@@ -68,6 +92,9 @@ remove_port_mappings() {
         remove_port_mapping "$port" "$protocol"
     done
 }
+
+# Initial delay to ensure network is ready
+sleep 5
 
 # Trap SIGTERM and SIGINT
 trap "remove_port_mappings; exit 0" TERM INT

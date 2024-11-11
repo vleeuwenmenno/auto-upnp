@@ -9,9 +9,6 @@ services:
     network_mode: host
     environment:
       UPNP_DURATION: 86400  # 24 hours in seconds
-      # One-liner
-      # PORTS: [{"port": 80, "protocol": "tcp"}, {"port": 443, "protocol": "tcp"}]
-      # Or multi-line
       PORTS: | 
         [
           {"port": 7777, "protocol": "udp"},
