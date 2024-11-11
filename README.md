@@ -19,7 +19,7 @@ services:
     image: ghcr.io/vleeuwenmenno/auto-upnp:latest
     network_mode: host
     environment:
-      - PORTS=[{"port": 80, "protocol": "tcp"}, {"port": 443, "protocol": "tcp"}]
+      PORTS: [{"port": 80, "protocol": "tcp"}, {"port": 443, "protocol": "tcp"}]
 ```
 
 ### Environment Variables
