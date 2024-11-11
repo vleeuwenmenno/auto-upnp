@@ -1,0 +1,26 @@
+name: auto-upnp
+services:
+  upnp:
+    # image: ghcr.io/vleeuwenmenno/auto-upnp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      UPNP_DURATION: 86400  # 24 hours in seconds
+      PORTS: | 
+        [
+          {"port": 7777, "protocol": "udp"},
+          {"port": 15000, "protocol": "udp"},
+          {"port": 15777, "protocol": "udp"},
+          {"port": 27015, "protocol": "tcp"},
+          {"port": 27015, "protocol": "udp"},
+          {"port": 27031, "protocol": "udp"},
+          {"port": 27032, "protocol": "udp"},
+          {"port": 27033, "protocol": "udp"},
+          {"port": 27034, "protocol": "udp"},
+          {"port": 27035, "protocol": "udp"},
+          {"port": 27036, "protocol": "tcp"},
+          {"port": 27036, "protocol": "udp"}
+        ]
